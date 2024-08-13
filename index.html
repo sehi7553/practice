@@ -87,39 +87,64 @@
         </div>
     </div>
     <script>
-        // 게임의 장면과 대화 데이터를 정의합니다.
-        const scenes = {
+          // 게임의 장면과 대화 데이터를 정의합니다.
+          const scenes = {
             start: {
                 background: 'img/img1.jpg',
-                dialogue:'안녕 내 이름은 김세히, 맥주를 사러 편의점에 가는중이죠... 어느길로 갈까~',
+                dialogue: [
+                    '김세히 나이 29살 돈없는 가난뱅이 백수입니다.',
+                    '맥주를 사러 편의점에 가려는데 오늘은 괜히 다른길로 가고싶습니다...',
+                    '어떻게 하실..?'
+                ],
                 choices: [
-                    { text: '늘 가던 길', nextScene: 'old' },
-                    { text: '새로운 길', nextScene: 'new' }
+                    { text: '돈 없으니 걍 돌아간다', nextScene: 'a1' },
+                    { text: '늘 가던 길', nextScene: 'a2' },
+                    { text: '새로운길', nextScene: 'a3' }
                 ]
             },
-            old: {
+            a1: {
                 background: 'img/img2.jpg',
-                dialogue: '그래 그냥 늘 가던길로 가자... 잠시 후 당신은 무언가 이상한 소리를 듣습니다.',
+                dialogue: [
+                    '그래... 내 처지에 뭔 맥주야.. 집 가서 걍 보리차나 마시자~^^',
+                    '그렇게 김세히는 집으로 안전귀가 했습니다.',
+                    '엔딩 : 아무일도 없었다1.'
+                ],
                 choices: [
-                    { text: '소리를 따라간다', nextScene: 'followSound' },
-                    { text: '무시하고 계속 간다', nextScene: 'ignoreSound' }
+                    { text: '선택지 다시 선택', nextScene: 'start' }
                 ]
             },
-            new: {
+            a2: {
                 background: 'img/img2.jpg',
-                dialogue: '오늘은 새로운 길을 좀 개척해 나가볼까?! 길은 낯설지만 신선한 느낌입니다.',
+                dialogue: [
+                    '늘 가던길이 최고지~',
+                    '김세히는 늘 가던 지름길로 편의점을 갑니다.'
+                ],
                 choices: [
-                    { text: '산길을 오른다', nextScene: 'climbMountain' },
-                    { text: '돌아간다', nextScene: 'start' }
+                    { text: '준비중ㅋㅋ', nextScene: 'start' },
+                    { text: '선택지 다시 선택', nextScene: 'start' }
+                ]
+            },
+            a3: {
+                background: 'img/img2.jpg',
+                dialogue: [
+                    '오늘은 좀 색다른 길을 개척해 나가볼까? 산책도 할겸 좀 돌아가지뭐~!',
+                    '어떤 길로 가볼까!.(준비중)'
+                ],
+                choices: [
+                    { text: '선택지 다시 선택', nextScene: 'start' },
+                    { text: '광장으로 간다', nextScene: 'forestEntrance' },
+                    { text: '골목으로 간다', nextScene: 'forestEntrance' }
                 ]
             }
         };
 
         let currentDialogueIndex = 0;
         let currentScene = 'start';
+        let isTyping = false; // 타이핑 중인지 여부를 저장하는 변수
 
         function typeText(text, element, callback) {
             let i = 0;
+            isTyping = true;
             element.textContent = '';
 
             function type() {
@@ -128,6 +153,7 @@
                     i++;
                     setTimeout(type, 30); // 타이핑 속도 설정 (30ms)
                 } else {
+                    isTyping = false;
                     if (callback) callback();
                 }
             }
@@ -158,6 +184,8 @@
         }
 
         function nextDialogue() {
+            if (isTyping) return; // 타이핑 중이면 무시
+
             const scene = scenes[currentScene];
             const dialogueElement = document.getElementById('dialogue');
 
