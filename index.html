@@ -38,7 +38,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 1;
+            z-index: -1;
         }
 
         .text-box {
@@ -56,7 +56,7 @@
         }
 
         .choices {
-            margin-top: 10px;
+            padding-top: 250px;
             display: flex;
             justify-content: space-around;
         }
@@ -82,24 +82,29 @@
             <div id="choices" class="choices">
                 <!-- 선택지가 이곳에 동적으로 추가됩니다 -->
             </div>
+            
+            <img id="background" src="background1.jpg" alt="배경 이미지">
         </div>
     </div>
     <script>
         // 게임의 장면과 대화 데이터를 정의합니다.
         const scenes = {
             start: {
+                background: 'img/img1.jpg',
                 dialogue: [
-                    '어두운 숲 속에서 당신은 길을 잃었습니다.',
-                    '어디로 가시겠습니까?'
+                    '안녕 내 이름은 김세히,',
+                    '맥주를 사러 편의점에 가는중이죠',
+                    '어느길로 갈까~'
                 ],
                 choices: [
-                    { text: '왼쪽 길', nextScene: 'leftPath' },
-                    { text: '오른쪽 길', nextScene: 'rightPath' }
+                    { text: '늘 가던 길', nextScene: 'old' },
+                    { text: '새로운 길', nextScene: 'new' }
                 ]
             },
-            leftPath: {
+            old: {
+                background: 'img/img2.jpg',
                 dialogue: [
-                    '왼쪽 길로 들어섰습니다.',
+                    '그래 그냥 늘 가던길로 가자',
                     '잠시 후 당신은 무언가 이상한 소리를 듣습니다.'
                 ],
                 choices: [
@@ -107,70 +112,32 @@
                     { text: '무시하고 계속 간다', nextScene: 'ignoreSound' }
                 ]
             },
-            rightPath: {
+            new: {
+                background: 'img/img2.jpg',
                 dialogue: [
-                    '오른쪽 길로 들어섰습니다.',
-                    '앞에는 험난한 산길이 보입니다.'
+                    '오늘은 새로운 길을 좀 개척해 나가볼까?!',
+                    '길은 낯설지만 신선한 느낌입니다.'
                 ],
                 choices: [
                     { text: '산길을 오른다', nextScene: 'climbMountain' },
                     { text: '돌아간다', nextScene: 'start' }
                 ]
-            },
-            followSound: {
-                dialogue: [
-                    '당신은 소리를 따라가다가 숲 속의 비밀 장소를 발견합니다.'
-                ],
-                choices: [
-                    { text: '탐험한다', nextScene: 'explore' },
-                    { text: '다시 돌아간다', nextScene: 'start' }
-                ]
-            },
-            ignoreSound: {
-                dialogue: [
-                    '당신은 소리를 무시하고 길을 계속 걷습니다.',
-                    '결국 길을 벗어나 버렸습니다.'
-                ],
-                choices: [
-                    { text: '다시 시작하기', nextScene: 'start' }
-                ]
-            },
-            climbMountain: {
-                dialogue: [
-                    '당신은 산길을 오르다 넘어져 큰 부상을 입습니다.'
-                ],
-                choices: [
-                    { text: '다시 시작하기', nextScene: 'start' }
-                ]
-            },
-            explore: {
-                dialogue: [
-                    '당신은 숲 속의 비밀 장소에서 보물을 발견했습니다!'
-                ],
-                choices: [
-                    { text: '다시 시작하기', nextScene: 'start' }
-                ]
             }
         };
 
-        let typingTimeout;
-        let currentDialogue = '';
-        let isTyping = false;
         let currentDialogueIndex = 0;
+        let currentScene = 'start';
 
         function typeText(text, element, callback) {
             let i = 0;
-            currentDialogue = text;
             element.textContent = '';
-            isTyping = true;
 
             function type() {
                 if (i < text.length) {
                     element.textContent += text.charAt(i);
                     i++;
-                    typingTimeout = setTimeout(type, 30); // 타이핑 속도 설정 (50ms)
+                    setTimeout(type, 30); // 타이핑 속도 설정 (30ms)
                 } else {
-                    isTyping = false;
                     if (callback) callback();
                 }
             }
@@ -182,39 +149,37 @@
             const scene = scenes[sceneName];
             const dialogueElement = document.getElementById('dialogue');
             const choicesContainer = document.getElementById('choices');
+            const backgroundElement = document.getElementById('background');
+
+            // 배경 이미지 설정
+            backgroundElement.src = scene.background;
 
             // 초기화
-            clearTimeout(typingTimeout);
-            isTyping = false;
+            currentScene = sceneName;
             currentDialogueIndex = 0;
+            choicesContainer.innerHTML = ''; // 선택지를 비웁니다.
 
-            // 클릭 이벤트 리스너 제거 후 다시 설정 (중복 방지)
-            document.body.onclick = null;
-            document.body.onclick = () => {
-                if (isTyping) {
-                    clearTimeout(typingTimeout);
-                    dialogueElement.textContent = currentDialogue;
-                    isTyping = false;
-                } else {
-                    if (currentDialogueIndex < scene.dialogue.length) {
-                        showNextDialogue();
-                    } else {
-                        showChoices(scene.choices);
-                    }
-                }
-            };
+            // 첫 번째 대화 표시
+            typeText(scene.dialogue[currentDialogueIndex], dialogueElement, () => {
+                // 타이핑이 완료되면 클릭으로 다음 대화를 진행할 수 있게 합니다.
+                document.getElementById('text-box').onclick = nextDialogue;
+                document.getElementById('scene').onclick = nextDialogue;
+            });
+        }
 
-            function showNextDialogue() {
-                if (currentDialogueIndex < scene.dialogue.length) {
-                    typeText(scene.dialogue[currentDialogueIndex], dialogueElement, () => {
-                        currentDialogueIndex++;
-                    });
-                } else {
-                    showChoices(scene.choices);
-                }
+        function nextDialogue() {
+            const scene = scenes[currentScene];
+            const dialogueElement = document.getElementById('dialogue');
+
+            currentDialogueIndex++;
+
+            if (currentDialogueIndex < scene.dialogue.length) {
+                // 다음 대화를 타이핑
+                typeText(scene.dialogue[currentDialogueIndex], dialogueElement);
+            } else {
+                // 대화가 끝나면 선택지를 보여줍니다.
+                showChoices(scene.choices);
             }
-
-            showNextDialogue();
         }
 
         function showChoices(choices) {
@@ -224,12 +189,7 @@
                 const choiceElement = document.createElement('div');
                 choiceElement.textContent = choice.text;
                 choiceElement.classList.add('choice');
-                choiceElement.addEventListener('click', (event) => {
-                    event.stopPropagation(); // 이벤트가 부모 요소로 전달되지 않도록 함
-                    // 선택지 클릭 후 버튼 숨기기
-                    choicesContainer.innerHTML = '';
-                    showScene(choice.nextScene);
-                });
+                choiceElement.addEventListener('click', () => showScene(choice.nextScene));
                 choicesContainer.appendChild(choiceElement);
             });
         }
